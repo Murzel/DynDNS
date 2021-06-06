@@ -48,9 +48,13 @@ class DynDNS:
                     message = message.replace("\r\n", "\n")
                     firstline = re.search("\n", message)
 
-                    requested    = msg[:pos] if (pos := (msg := message[:firstline.start()][:re.search(" ", message[:firstline.start()]).start()]).find("?")) > -1 else msg
+                    msg = message[:firstline.start()][:re.search(" ", message[:firstline.start()]).start()]
+                    pos = msg.find("?") 
+
+                    requested    = msg[:pos] if pos > -1 else msg
                     HTTPVersion  = message[:firstline.start()].split()[-1]
-                    getVariables = listToDict("=", msg[pos+1:].split("&")) if (pos := msg.find("?")) > -1 else None
+
+                    getVariables = listToDict("=", msg[pos+1:].split("&")) if pos > -1 else None
                     message      = listToDict(":", list(map(str.strip, message[firstline.end():-2].split("\n"))))
 
                     if requested == "/":
@@ -64,7 +68,10 @@ class DynDNS:
                         client_socket.sendall(HTTP_Response().MIME_image_png("Code/Webserver/src/images/logo.png"))
                     if requested == "/nic/update":
                         if getVariables:
-                            if (ip := find_ip(getVariables.get("myip"))) and (credentials := message.get("Authorization")):
+                            ip = find_ip(getVariables.get("myip"))
+                            credentials = message.get("Authorization")
+
+                            if ip and credentials:
                                 credentials = base64.b64decode(credentials.split()[1]).decode().split(":")
                                 if self.username == credentials[0] and self.password == credentials[1]:
                                     if self.current_ip != ip:
@@ -137,7 +144,9 @@ class DynDNS:
         for entry in self.logfile.execute("SELECT * FROM History;").fetchall():
             stringBuilder.append("{:^10}|{:^28}|{:^28}".format(entry[0], entry[1], entry[2]))
 
-            if (count := count + 1) >= entries:
+            count = count + 1
+
+            if count >= entries:
                 break
 
         return "\n".join(stringBuilder) + "\n"

@@ -1,7 +1,9 @@
 import re
 
 def find_ip(string : str) -> str:
-    if (tmp := re.search(r'[0-9]+.[0-9]+.[0-9]+.[0-9]+', string)):
+    tmp = re.search(r'[0-9]+.[0-9]+.[0-9]+.[0-9]+', string)
+    
+    if tmp:
         return tmp.string
 
     return ""
