@@ -8,7 +8,6 @@ class DynDNS:
     __events = []
     logfile_filename = "DynDNS.log"
 
-
     def __init__(self, username : str, password : str, port : int = 1337) -> None:
         self.username = username
         self.password = password
