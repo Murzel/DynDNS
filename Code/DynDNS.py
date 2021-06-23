@@ -1,12 +1,13 @@
 from Code.Socket_Helper import Server_Socket
 from Code.Web_Response import HTTP_Response
 from Code.Helper import *
-import socket, re, base64, inspect, sqlite3, asyncio
+import socket, re, base64, inspect, sqlite3, asyncio, requests
 
 class DynDNS:
     current_ip = "UNKNOWN YET"
     __events = []
     logfile_filename = "DynDNS.log"
+    
 
     def __init__(self, username : str, password : str, port : int = 1337) -> None:
         # Set basic auth for router 
@@ -29,6 +30,10 @@ class DynDNS:
 
         # Apply changes
         self.logfile.commit()
+
+        # Set initial public ip address
+        # Since I was unable to make a request to the router to get the current public ip, I'm getting the current ip by a request... 
+        self.newPublicIpAdress(requests.get("http://ip.42.pl/raw").text)
 
     async def __init_server(self, port):
         task = asyncio.create_task(self.__loading())
@@ -86,9 +91,7 @@ class DynDNS:
                                 credentials = base64.b64decode(credentials.split()[1]).decode().split(":")
                                 if self.username == credentials[0] and self.password == credentials[1]:
                                     if self.current_ip != ip:
-                                        self.current_ip = ip
-                                        self.__trigger_update()
-                                        print("New", self.addLog(ip))
+                                        self.newPublicIpAdress(ip)
                                         client_socket.sendall(HTTP_Response().STATUS_no_content())
                     else:
                         # client_socket.sendall(HTTP_Response().MIME_text_html("Page not found - 404"))
@@ -119,6 +122,11 @@ class DynDNS:
                 event(self.current_ip)
             else:
                 event()
+
+    def newPublicIpAdress(self, ip : str):
+        self.current_ip = ip
+        self.__trigger_update()
+        print("New", self.addLog(ip))
 
     # logfile
     def addLog(self, ip : str) -> str:
