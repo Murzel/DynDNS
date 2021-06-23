@@ -1,7 +1,7 @@
 from Code.Socket_Helper import Server_Socket
 from Code.Web_Response import HTTP_Response
 from Code.Helper import *
-import socket, re, base64, inspect, sqlite3
+import socket, re, base64, inspect, sqlite3, asyncio
 
 class DynDNS:
     current_ip = "UNKNOWN YET"
@@ -9,10 +9,12 @@ class DynDNS:
     logfile_filename = "DynDNS.log"
 
     def __init__(self, username : str, password : str, port : int = 1337) -> None:
+        # Set basic auth for router 
         self.username = username
         self.password = password
 
-        self.server = Server_Socket(port if port else 1337)
+        # Set up server for router and client
+        self.server = asyncio.run(self.__init_server(port))
 
         # Connect to database, if not exist, create it
         self.logfile = sqlite3.connect("DynDNS.sqlite3")
@@ -27,6 +29,16 @@ class DynDNS:
 
         # Apply changes
         self.logfile.commit()
+
+    async def __init_server(self, port):
+        task = asyncio.create_task(self.__loading())
+
+        server = Server_Socket(port if port else 1337)
+        task.cancel()
+
+        print("Server starts running at port", server.port)
+
+        return server
 
     def run(self):
         # Magic / Logic - Depends on the view
@@ -149,3 +161,10 @@ class DynDNS:
                 break
 
         return "\n".join(stringBuilder) + "\n"
+
+    async def __loading(self):
+        asyncio.sleep(.1)
+        while True:
+            for dot in range(4):
+                print("Starting" + "." * dot + "   ", end="\r")
+                asyncio.sleep(.7)

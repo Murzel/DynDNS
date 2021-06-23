@@ -10,8 +10,6 @@ class Server_Socket():
 
         self.sock.bind((self.ip, self.port))
         self.sock.listen()
-
-        print("Server starts running at port", self.port)
     
     @property
     def sock(self):
